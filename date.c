@@ -126,6 +126,47 @@ Date *date_duplicate(Date *d){
     return dupdate;                             // return new duplicate date
 }
 
+/*
+ * date_compare compares two dates, returning <0, 0, >0 if
+ * date1<date2, date1==date2, date1>date2, respectively
+ */
+int date_compare(Date *date1, Date *date2){
+    int day1, month1, year1 = 0;                // initialise new variables for date1 values
+    date1->dd = day1;
+    date1->mm = month1;
+    date1->yy = year1;
+
+    int day2, month2, year2 = 0;                // initialise new variables for date2 values
+    date2->dd = day2;
+    date2->mm = month2;
+    date2->yy = year2;
+
+    if (year1 < year2) {            // if the first year is older than the second year then return -1
+        return -1;
+    } else if (year1 > year2) {     // if the first year is more recent than the second year return 1
+        return 1;
+    } else if (year1 == year2) {    // if the years are the same...
+        if (month1 < month2) {      // ...check if the first month is older than the second month then return -1
+            return -1;
+        } else if (month1 > month2) { // if the first month is more recent that the second month return 1
+            return 1;
+        } else if (month1 == month2) {  // if the months are the same...
+            if (day1 < day2) {          // ...check if the first day is older that the second day, return -1
+                return -1;
+            } else if (day1 > day2) {   // if the first day is more recent that the second day, return 1
+                return 1;
+            } else {
+                return 0;               // the dates are exactly the same, return 0
+            }
+        }
+    }
+
+    prinf("Error: comparison failed");  // if the above checks fail, return null
+    return NULL;
+
+
+}
+
 void date_destroy(Date *d){
 	printf("About to free storage\n");
 	free(d);                                    // free up memory at pointer location
