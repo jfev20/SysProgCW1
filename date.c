@@ -28,6 +28,7 @@ Date *date_create(char *datestr){
      * should we only accept / as the separator?
      * Should the position of the separators always be the same (pos 2 & 5)?
      * Is there a limit of the years we should accept? (e.g. 1990 to 2020)
+     * does date_duplication have any validation?
      * 
     */
 
@@ -103,6 +104,26 @@ Date *date_create(char *datestr){
     gooddate->yy = year;
 
     return gooddate;                            // return address of date structure
+}
+
+Date *date_duplicate(Date *d){
+    Date* dupdate = malloc(sizeof(Date));       // allocate memory for duplicate date structure
+
+    if (dupdate == NULL) {                      // if mem allocation fails
+        printf("Memory allocation failure\n");
+        return NULL;                            // return null and quit
+    }
+
+    int dupday, dupmonth, dupyear = 0;          // initialise new values for duplicate date
+    d->dd = dupday;
+    d->mm = dupmonth;
+    d->yy = dupyear;
+
+    dupdate->dd = dupday;                       // set new values to duplicate date structure
+    dupdate->mm = dupmonth;
+    dupdate->yy = dupyear;
+
+    return dupdate;                             // return new duplicate date
 }
 
 void date_destroy(Date *d){
