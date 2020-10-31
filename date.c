@@ -193,7 +193,7 @@ int date_compare(Date *date1, Date *date2){ // finish this: only returns 0
 
 void date_destroy(Date *d){
 	printf("About to free storage\n");
-	free(d);                                    // free up memory at pointer location
+	if (d != NULL) free(d);             // if date is not null free up memory at pointer location
     d = NULL;
 	printf("Storage freed\n");
 }
