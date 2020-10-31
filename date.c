@@ -78,7 +78,7 @@ Date *date_create(char *datestr){
     printf("Position of second / is %d\n", index);
 
     int day, month, year = 0;       // initialise days, months and years
-    char* endptr;
+    char* endptr = NULL;
     
     day = strtol(datestr, &endptr, 10); // convert first part of string (days) to int
 
@@ -104,9 +104,8 @@ Date *date_create(char *datestr){
     }
     printf("Year: %d\n", year);
     
-    int result = valid_date(day, month, year);  // check if final result is a valid date (e.g. 29th Feb only on leap years/no 33rd of months/max 12 months etc)
-
-    if (result == 0) {              // if date validation fails
+    // check if final result is a valid date (e.g. 29th Feb only on leap years/no 33rd of months/max 12 months etc)
+    if (!(valid_date(day, month, year))) {              // if date validation fails
         printf("Invalid date\n");     
         return NULL;                // return null and quit
     }
@@ -128,20 +127,11 @@ Date *date_create(char *datestr){
 }
 
 Date *date_duplicate(Date *d){
-    Date* dupdate = malloc(sizeof(Date));       // allocate memory for duplicate date structure
+    Date* dupdate = malloc(sizeof(*d));       // allocate memory for duplicate date structure
 
-    if (dupdate == NULL) {                      // if mem allocation fails
-        printf("Memory allocation failure\n");
-        return NULL;                            // return null and quit
+    if (dupdate != NULL) {                      // if mem allocation doesn't fail
+        *dupdate = *d;                          // duplicate date to new address
     }
-
-    int dupday = d->dd;          // initialise new values for duplicate date
-    int dupmonth = d->mm;
-    int dupyear = d->yy;
-
-    dupdate->dd = dupday;                       // set new values to duplicate date structure
-    dupdate->mm = dupmonth;
-    dupdate->yy = dupyear;
 
     return dupdate;                             // return new duplicate date
 }
@@ -151,13 +141,31 @@ Date *date_duplicate(Date *d){
  * date1<date2, date1==date2, date1>date2, respectively
  */
 int date_compare(Date *date1, Date *date2){ // finish this: only returns 0
-    int day1 = date1->dd;
+    
+    if (date1->yy > date2->yy) return 1;
+
+    if (date1->yy < date2->yy) return -1;
+
+    if (date1->mm > date2->mm) return 1;
+
+    if (date1->mm < date2->mm) return -1;
+
+    if (date1->dd > date2->dd) return 1;
+
+    if (date1->dd < date2->dd) return -1;
+
+    return 0;
+
+    /*int day1 = date1->dd;
     int month1 = date1->mm;
     int year1 = date1->yy;                // initialise new variables for date1 values
+    printf("date1 - day: %d, month: %d, year: %d\n", day1, month1, year1);
+
 
     int day2 = date2->dd;
     int month2 = date2->mm;
     int year2 = date2->yy;                // initialise new variables for date2 values
+    printf("date2 - day: %d, month: %d, year: %d\n", day2, month2, year2);
 
     int result = -2;
 
@@ -180,7 +188,7 @@ int date_compare(Date *date1, Date *date2){ // finish this: only returns 0
             }
         }
     }
-    return result;
+    return result;*/
 }
 
 void date_destroy(Date *d){
