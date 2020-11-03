@@ -12,9 +12,6 @@ typedef struct date {
  * |    HELPER METHOD INITIALISATION    |
  * |    DATE FUNCTIONS                  |
  * |    DATE VALIDATION FUNCTIONS       |
- * |    ITERATOR FUNCTIONS              |
- * |    ROTATION FUNCTIONS              |
- * |    OTHER HELPER FUNCTIONS          |
  * |====================================|
  */
 
