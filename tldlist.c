@@ -20,10 +20,10 @@ typedef struct tldnode{
 } TLDNode;
 
 typedef struct tlditerator{
-    TLDList *tree;
-    TLDNode **nodes;
-    long size;
-    int index;
+    TLDList *tree;      // copy of AVL tree
+    TLDNode **nodes;    // array of all nodes
+    long size;          // total number fo nodes (taken from TLDList)
+    int index;          // index of current node
 } TLDIterator;
 
 /**
@@ -42,7 +42,7 @@ typedef struct tlditerator{
 /**
  * extra helper methods
  */
-TLDNode *tldnode_create(char *element);
+TLDNode *tldnode_create(char *name);
 void tldnode_destroy(TLDNode *node);
 TLDNode *leftrotate(TLDNode *root);
 TLDNode *rightrotate(TLDNode *root);
@@ -80,8 +80,10 @@ void tldlist_destroy(TLDList *tld){
     if (tld != NULL) {
         tldnode_destroy(tld->root);     // call node destroyer function, passing it the root to destroy all nodes
     }
-    free(tld);                          // preventing memory leaks
-    //printf("TLDList: Storage freed\n");
+    // preventing memory leaks
+    date_destroy(tld->start_date);
+    date_destroy(tld->end_date);
+    free(tld);
 };
 
 /**
@@ -100,21 +102,17 @@ int tldlist_add(TLDList *tld, char *hostname, Date *d){
         return 0;  
 
     // capture tld from the hostname
-    address = strrchr(hostname, '.') + 1; 
+    address = strrchr(hostname, '.') + 1;           // removes dot before TLD
     length = strlen(address);
     host = (char *)malloc(sizeof(char)*(length+1));
     host[length] = '\0';
     strcpy(host, address);
 
-    // initialise node properties
-    TLDNode *node = (TLDNode *)malloc(sizeof(TLDNode)); 
+    // create node and initialise properties
+    TLDNode *node = tldnode_create(host);
+
     if (node != NULL) {
-        node->name = host;
-        node->count = 1;
-        node->left = NULL;
-        node->right = NULL;
-        node->height = 1;
-        tld->root = tldlist_balance(tld, tld->root, node); // balance tree
+        tld->root = tldlist_balance(tld, tld->root, node); // set new root to root returned by balance tree function
         tld->count++;
         return 1;
     } else {
@@ -127,8 +125,6 @@ int tldlist_add(TLDList *tld, char *hostname, Date *d){
 
 /**
  * method to balance out AVL tree if too many nodes on one side
- * 
- * memory leaks come from here (definitely lost: 24 bytes in 2 blocks)
  */
 TLDNode *tldlist_balance(TLDList *tld, TLDNode *root, TLDNode *node) {
     
@@ -145,14 +141,13 @@ TLDNode *tldlist_balance(TLDList *tld, TLDNode *root, TLDNode *node) {
     } else {
         root->count++;                                          // new node has same hostname as root so increment root count
         // preventing memory leaks
-        free(node->name);
-        free(node);
-        node = NULL;
+        tldnode_destroy(node);
     }
 
     root->height = largestValue(getHeight(root->left), getHeight(root->right))+1;
 
-    long bal = (node == NULL)? 0 : getHeight(node->left) - getHeight(node->right); // check balance of right and left branches for node, >1 for left-heavy, <-1 for right-heavy
+    // check balance of right and left branches for node, >1 for left-heavy, <-1 for right-heavy
+    long bal = (node == NULL)? 0 : getHeight(node->left) - getHeight(node->right); 
 
     if (bal > 1) {                                              // if tree is left branch heavy...
         if (strcmp(node->name, root->left->name) < 0) {         // ...and if the new node goes on the right...
@@ -185,13 +180,15 @@ long tldlist_count(TLDList *tld){
 /**
  * helper function to create new node for the AVL tree
  */
-TLDNode *tldnode_create(char *element){
+TLDNode *tldnode_create(char *name){
     TLDNode *node = (TLDNode *)malloc(sizeof(TLDNode));
         //initialise node properties
         if (node != NULL) {
             node->left = NULL;
             node->right = NULL;
-            node->count = 0;
+            node->count = 1;
+            node->name = name;
+            node->height = 1;
         }
         return node;
 };
@@ -207,6 +204,7 @@ void tldnode_destroy(TLDNode *node) {
         // preventing memory leaks
         free(node->name);   
         free(node);
+        node = NULL;
     }
 };
 
@@ -238,7 +236,7 @@ TLDIterator *tldlist_iter_create(TLDList *tld){
     TLDIterator *iter = (TLDIterator *)malloc(sizeof(TLDIterator));
 
     if (iter == NULL || tld == NULL) {
-        free(iter);                         // preventing memory leaks
+        free(iter); // preventing memory leaks
         return NULL;
     }
 
@@ -246,7 +244,6 @@ TLDIterator *tldlist_iter_create(TLDList *tld){
     iter->tree = tld;
     iter->size = tld->size;
     iter->index = 0;
-
     iter->nodes = (TLDNode **)malloc(sizeof(TLDNode *) * iter->size);
 
     if (iter->nodes == NULL) {
@@ -254,6 +251,7 @@ TLDIterator *tldlist_iter_create(TLDList *tld){
         return NULL;
     }
 
+    // recursively insert nodes to tree
     int i = 0;
     if (iter->size != 0) 
         populate_iter(iter, iter->tree->root, &i);
@@ -268,7 +266,7 @@ void populate_iter (TLDIterator *iter, TLDNode *node, int *i) {
     if (node->left != NULL)
         populate_iter(iter, node->left, i);     // recursively iterate through left children
 
-    *(iter->nodes + (*i)++) = node;                                                 // what does this do?
+    *(iter->nodes + (*i)++) = node;             // add node to iter node array
 
     if (node->right != NULL)
         populate_iter(iter, node->right, i);    // recursively iterate through right children
@@ -279,10 +277,13 @@ void populate_iter (TLDIterator *iter, TLDNode *node, int *i) {
  * to the TLDNode if successful, NULL if no more elements to return
  */
 TLDNode *tldlist_iter_next(TLDIterator *iter){
+    // check if it has reached the end of the tree
     if (iter->index == iter->size) 
         return NULL;
 
-    return *(iter->nodes + iter->index++);                                          // what does this do?
+    TLDNode *next = *(iter->nodes + iter->index++); // pointer to the next node in array
+
+    return next;
 };
 
 /*
