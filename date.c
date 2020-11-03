@@ -10,18 +10,13 @@ typedef struct date {
 int valid_date(int d, int m, int y); // declaring date validation method 
 int leap_year(int year); // declaring leap year validation method 
 
-int main() {    // test function - remove when submitting
+/*int main() {    // test function - remove when submitting
 
     char datestr1[11] = "28/02/2019";
     char datestr2[11] = "16/07/2018";
 
     printf("-------- TEST DATE CREATION --------\n");
     Date *outdate1 = date_create(datestr1);
-    //if (outdate1 == NULL) {
-    //    printf("Date 1 could not be created\n");
-    //} else {
-    //    printf("Date 1 created: %d/%d/%d\n", outdate1->dd, outdate1->mm, outdate1->yy);
-    //}
     outdate1 == NULL ? printf("Date 1 could not be created\n") : printf("Date 1 created: %d/%d/%d\n", outdate1->dd, outdate1->mm, outdate1->yy);
 
     Date *outdate2 = date_create(datestr2);
@@ -42,7 +37,7 @@ int main() {    // test function - remove when submitting
     printf("-------- TEST DATE DESTRUCTION --------\n");
     date_destroy(outdate1);
     printf("end of program\n");
-}
+}*/
 
 Date *date_create(char *datestr){
     /**
@@ -55,7 +50,7 @@ Date *date_create(char *datestr){
 
     char* sep1;
     char* sep2;
-    int index = 0;
+    //int index = 0;
 
     sep1 = strchr(datestr, '/');    // search for first occurance of / starting from beginning of string
 
@@ -64,8 +59,8 @@ Date *date_create(char *datestr){
         return NULL;                // return null and quit
     }
 
-    index = (int)(sep1 - datestr);  // store position of first /
-    printf("Position of first / is %d\n", index);
+    //index = (int)(sep1 - datestr);  // store position of first /
+    //printf("Position of first / is %d\n", index);
 
     sep2 = strchr(sep1 + 1, '/');   // search for second occurance of / starting from char after first /
 
@@ -74,8 +69,8 @@ Date *date_create(char *datestr){
         return NULL;                // return null and quit
     } 
 
-    index = (int)(sep2 - datestr);  // store position of second /
-    printf("Position of second / is %d\n", index);
+    //index = (int)(sep2 - datestr);  // store position of second /
+    //printf("Position of second / is %d\n", index);
 
     int day, month, year = 0;       // initialise days, months and years
     char* endptr = NULL;
@@ -86,7 +81,7 @@ Date *date_create(char *datestr){
         printf("Invalid characters before first /\n");
         return NULL;
     }
-    printf("Day: %d\n", day);
+    //printf("Day: %d\n", day);
 
     month = strtol(sep1 + 1, &endptr, 10); // convert after first / (months) to int
 
@@ -94,7 +89,7 @@ Date *date_create(char *datestr){
         printf("Invalid characters before second /\n");
         return NULL;
     }
-    printf("Month: %d\n", month);
+    //printf("Month: %d\n", month);
 
     year = strtol(sep2 + 1, &endptr, 10); // convert last part of string (years) to int
 
@@ -102,7 +97,7 @@ Date *date_create(char *datestr){
         printf("Invalid characters at end of date\n");
         return NULL;
     }
-    printf("Year: %d\n", year);
+    //printf("Year: %d\n", year);
     
     // check if final result is a valid date (e.g. 29th Feb only on leap years/no 33rd of months/max 12 months etc)
     if (!(valid_date(day, month, year))) {              // if date validation fails
@@ -110,7 +105,7 @@ Date *date_create(char *datestr){
         return NULL;                // return null and quit
     }
 
-    printf("Date valid\n");
+    //printf("Date valid\n");
 
 	Date* gooddate = malloc(sizeof(Date));      // allocate memory for date structure
 
@@ -155,47 +150,13 @@ int date_compare(Date *date1, Date *date2){ // finish this: only returns 0
     if (date1->dd < date2->dd) return -1;
 
     return 0;
-
-    /*int day1 = date1->dd;
-    int month1 = date1->mm;
-    int year1 = date1->yy;                // initialise new variables for date1 values
-    printf("date1 - day: %d, month: %d, year: %d\n", day1, month1, year1);
-
-
-    int day2 = date2->dd;
-    int month2 = date2->mm;
-    int year2 = date2->yy;                // initialise new variables for date2 values
-    printf("date2 - day: %d, month: %d, year: %d\n", day2, month2, year2);
-
-    int result = -2;
-
-    if (year1 < year2) {            // if the first year is older than the second year then return -1
-        result = -1;
-    } else if (year1 > year2) {     // if the first year is more recent than the second year return 1
-        result = 1;
-    } else if (year1 == year2) {    // if the years are the same...
-        if (month1 < month2) {      // ...check if the first month is older than the second month then return -1
-            result = -1;
-        } else if (month1 > month2) { // if the first month is more recent that the second month return 1
-            result = 1;
-        } else if (month1 == month2) {  // if the months are the same...
-            if (day1 < day2) {          // ...check if the first day is older that the second day, return -1
-                result = -1;
-            } else if (day1 > day2) {   // if the first day is more recent that the second day, return 1
-                result = 1;
-            } else {
-                result = 0;               // the dates are exactly the same, return 0
-            }
-        }
-    }
-    return result;*/
 }
 
 void date_destroy(Date *d){
-	printf("About to free storage\n");
+	//printf("About to free storage\n");
 	if (d != NULL) free(d);             // if date is not null free up memory at pointer location
     d = NULL;
-	printf("Storage freed\n");
+	//printf("Date: Storage freed\n");
 }
 
 int valid_date(int d, int m, int y) {
@@ -276,7 +237,7 @@ int leap_year(int year) {
 		leap = 0;
 	if (year % 400 == 0)
 		leap = 1;
-	if (leap)
-		printf("Leap year entered\n");
+	//if (leap)
+	//	printf("Leap year entered\n");
 	return leap;
 }

@@ -1,41 +1,57 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "tldlist.h"
 
 typedef struct tldlist{
-    TLDNode *root;
-    Date *start_date;
-    Date *end_date;
-    long size;
-    long count;
+    TLDNode *root;      // Root node of AVL tree 
+    Date *start_date;   // starting date for tree
+    Date *end_date;     // final date for tree
+    long size;          // total number of nodes in tree
+    long count;         // number of accepted TLDs
 } TLDList;
 
 typedef struct tldnode{
-    TLDNode *left;
-    TLDNode *right;
-    char *name;
-    long count;
-    long height;
+    TLDNode *left;      // pointer to left child node
+    TLDNode *right;     // pointer to right child node
+    char *name;         // TLD name
+    long count;         // number of TLDs of the same name
+    long height;        // height of node in the tree
 } TLDNode;
 
 typedef struct tlditerator{
-    TLDNode *root;
-    TLDNode *current;
+    TLDList *tree;
+    TLDNode **nodes;
+    long size;
+    int index;
 } TLDIterator;
 
+/**
+ * |========[ORDER OF FUNCTIONS]========|
+ * |    HELPER METHOD INITIALISATION    |
+ * |    LIST FUNCTIONS                  |
+ * |    NODE FUNCTIONS                  |
+ * |    ITERATOR FUNCTIONS              |
+ * |    ROTATION FUNCTIONS              |
+ * |    OTHER HELPER FUNCTIONS          |
+ * |====================================|
+ */
+
+//------------------------------------[HELPER METHOD INITIALISATION]-------------------------------------------------
+
+/**
+ * extra helper methods
+ */
 TLDNode *tldnode_create(char *element);
-
 void tldnode_destroy(TLDNode *node);
-
 TLDNode *leftrotate(TLDNode *root);
-
 TLDNode *rightrotate(TLDNode *root);
-
-struct TLDNode *tldlist_balance(TLDList *tld, TLDNode *root, TLDNode *node);
-
+TLDNode *tldlist_balance(TLDList *tld, TLDNode *root, TLDNode *node);
 long largestValue(long x, long y);
-
 long getHeight(TLDNode *node);
+void populate_iter (TLDIterator *iter, TLDNode *node, int *i);
 
+//------------------------------------------[LIST FUNCTIONS]------------------------------------------------------
 
 /**
  * tldlist_create generates a list structure for storing counts against
@@ -61,22 +77,11 @@ TLDList *tldlist_create(Date *begin, Date *end){
  * destroy a list structure starting with the root node, calling the destroy node function
  */
 void tldlist_destroy(TLDList *tld){
-    printf("About to free storage\n");
-
-    if (tld != NULL) tldnode_destroy(tld->root);
-
-    printf("Storage freed\n");
-};
-
-/**
- * destroy/free a node and recursively destroy/free it's children
- */
-void tldnode_destroy(TLDNode *node) {
-    if (node != NULL) {
-        tldnode_destroy(node->left);
-        tldnode_destroy(node->right);
-        free(node);
+    if (tld != NULL) {
+        tldnode_destroy(tld->root);     // call node destroyer function, passing it the root to destroy all nodes
     }
+    free(tld);                          // preventing memory leaks
+    //printf("TLDList: Storage freed\n");
 };
 
 /**
@@ -89,34 +94,43 @@ int tldlist_add(TLDList *tld, char *hostname, Date *d){
     char *address;
     char *host;
     int length;
-    int comp;
 
-    if (date_compare(tld->start_date, d) > 0 || date_compate(tld->end_date, d) < 0) // check if date in range of tree
+    // check if date in range of tree
+    if (date_compare(tld->start_date, d) > 0 || date_compare(tld->end_date, d) < 0) 
         return 0;  
 
-
-    address = strrchr(hostname, '.') + 1; // capture tld from the hostname
+    // capture tld from the hostname
+    address = strrchr(hostname, '.') + 1; 
     length = strlen(address);
     host = (char *)malloc(sizeof(char)*(length+1));
     host[length] = '\0';
     strcpy(host, address);
 
-    TLDNode *node = (TLDNode *)malloc(sizeof(TLDNode)); // initialise node properties
+    // initialise node properties
+    TLDNode *node = (TLDNode *)malloc(sizeof(TLDNode)); 
     if (node != NULL) {
         node->name = host;
         node->count = 1;
         node->left = NULL;
         node->right = NULL;
         node->height = 1;
-        tld->root = tldlist_balance(tld, tld->root, node);
+        tld->root = tldlist_balance(tld, tld->root, node); // balance tree
         tld->count++;
         return 1;
     } else {
+        // preventing memory leaks
+        free(host);
+        free(node);
         return 0;
     }
 };
 
-struct TLDNode *tldlist_balance(TLDList *tld, TLDNode *root, TLDNode *node) {
+/**
+ * method to balance out AVL tree if too many nodes on one side
+ * 
+ * memory leaks come from here (definitely lost: 24 bytes in 2 blocks)
+ */
+TLDNode *tldlist_balance(TLDList *tld, TLDNode *root, TLDNode *node) {
     
     // if tldlist is empty, increment list size and return node
     if (root == NULL) { 
@@ -129,7 +143,11 @@ struct TLDNode *tldlist_balance(TLDList *tld, TLDNode *root, TLDNode *node) {
     } else if (strcmp(node->name, root->name) > 0) {
         root->right = tldlist_balance(tld, root->right, node);  // continue comparison down right 'branch'
     } else {
-        root->count++;                  // new node has same hostname as root so increment root count
+        root->count++;                                          // new node has same hostname as root so increment root count
+        // preventing memory leaks
+        free(node->name);
+        free(node);
+        node = NULL;
     }
 
     root->height = largestValue(getHeight(root->left), getHeight(root->right))+1;
@@ -151,6 +169,7 @@ struct TLDNode *tldlist_balance(TLDList *tld, TLDNode *root, TLDNode *node) {
             return leftrotate(root);                            // ... then rotate left
         }
     }
+    return root;
 };
 
 /**
@@ -161,38 +180,35 @@ long tldlist_count(TLDList *tld){
     return tld->count;
 };
 
+//--------------------------------------[NODE FUNCTIONS]-----------------------------------------------------
+
 /**
- * tldlist_iter_create creates an iterator over the TLDList; returns a pointer
- * to the iterator if successful, NULL if not
+ * helper function to create new node for the AVL tree
  */
-TLDIterator *tldlist_iter_create(TLDList *tld){
-    
-    TLDIterator *iter = (TLDIterator *)malloc(sizeof(TLDIterator));
-
-    if (iter == NULL || tld == NULL) return NULL;
-
-    // initialise iterator properties
-    iter->root = tld->root;
-    iter->current = tld->root;
-
-    return iter;
+TLDNode *tldnode_create(char *element){
+    TLDNode *node = (TLDNode *)malloc(sizeof(TLDNode));
+        //initialise node properties
+        if (node != NULL) {
+            node->left = NULL;
+            node->right = NULL;
+            node->count = 0;
+        }
+        return node;
 };
 
 /**
- * tldlist_iter_next returns the next element in the list; returns a pointer
- * to the TLDNode if successful, NULL if no more elements to return
+ * destroy/free a node and recursively destroy/free it's children
  */
-TLDNode *tldlist_iter_next(TLDIterator *iter){
-    if (iter->current == NULL) 
-        return NULL;
+void tldnode_destroy(TLDNode *node) {
+    if (node != NULL) {
+        tldnode_destroy(node->left);    // recursively destroy left child nodes
+        tldnode_destroy(node->right);   // recursively destroy right child nodes
 
-    // finish this method!!!!!!
+        // preventing memory leaks
+        free(node->name);   
+        free(node);
+    }
 };
-
-/*
-* tldlist_iter_destroy destroys the iterator specified by `iter'
-*/
-void tldlist_iter_destroy(TLDIterator *iter);
 
 /**
  * tldnode_tldname returns the tld associated with the TLDNode
@@ -209,33 +225,78 @@ long tldnode_count(TLDNode *node){
     return node->count;
 };
 
-/**
- *  compare two values and return the largest
- */
-long largestValue(long x, long y) {
-    return (x > y)? x : y;
-};
 
-/** 
- * return height of node or 0 if node is null
- */
-long getHeight(TLDNode *node) {
-    return (node == NULL)? 0 : node->height;
-};
+//-------------------------------------------[ITERATOR FUNCTIONS]-----------------------------------------------
 
-TLDNode *tldnode_create(char *element){
-    TLDNode *node = (TLDNode *)malloc(sizeof(TLDNode));
-        if (node != NULL) {
-            //node->parent = NULL;
-            node->left = NULL;
-            node->right = NULL;
-            node->count = 0;
-        }
-        return node;
-};
 
 /**
- * rotate tree left
+ * tldlist_iter_create creates an iterator over the TLDList; returns a pointer
+ * to the iterator if successful, NULL if not
+ */
+TLDIterator *tldlist_iter_create(TLDList *tld){
+    
+    TLDIterator *iter = (TLDIterator *)malloc(sizeof(TLDIterator));
+
+    if (iter == NULL || tld == NULL) {
+        free(iter);                         // preventing memory leaks
+        return NULL;
+    }
+
+    // initialise iterator properties
+    iter->tree = tld;
+    iter->size = tld->size;
+    iter->index = 0;
+
+    iter->nodes = (TLDNode **)malloc(sizeof(TLDNode *) * iter->size);
+
+    if (iter->nodes == NULL) {
+        tldlist_iter_destroy(iter);
+        return NULL;
+    }
+
+    int i = 0;
+    if (iter->size != 0) 
+        populate_iter(iter, iter->tree->root, &i);
+
+    return iter;
+};
+
+/**
+ * helper function to populate iterator with nodes from AVL tree
+ */
+void populate_iter (TLDIterator *iter, TLDNode *node, int *i) {
+    if (node->left != NULL)
+        populate_iter(iter, node->left, i);     // recursively iterate through left children
+
+    *(iter->nodes + (*i)++) = node;                                                 // what does this do?
+
+    if (node->right != NULL)
+        populate_iter(iter, node->right, i);    // recursively iterate through right children
+};
+
+/**
+ * tldlist_iter_next returns the next element in the list; returns a pointer
+ * to the TLDNode if successful, NULL if no more elements to return
+ */
+TLDNode *tldlist_iter_next(TLDIterator *iter){
+    if (iter->index == iter->size) 
+        return NULL;
+
+    return *(iter->nodes + iter->index++);                                          // what does this do?
+};
+
+/*
+* tldlist_iter_destroy destroys the iterator specified by `iter'
+*/
+void tldlist_iter_destroy(TLDIterator *iter){
+    free(iter->nodes);
+    free(iter);
+};
+
+//-----------------------------------------[ROTATION FUNCTIONS]-------------------------------------------
+
+/**
+ * helper function to rotate tree left
  */
 TLDNode *leftrotate(TLDNode *root) {
     TLDNode *newRoot = root->right; // right child of current root becomes new root
@@ -250,7 +311,7 @@ TLDNode *leftrotate(TLDNode *root) {
 }
 
 /**
- * rotate tree right
+ * helper function to rotate tree right
  */
 TLDNode *rightrotate(TLDNode *root) {
     TLDNode *newRoot = root->left;  // left child of current root becomes new root
@@ -263,3 +324,19 @@ TLDNode *rightrotate(TLDNode *root) {
 
     return newRoot;
 }
+
+//-------------------------------------[OTHER HELPER FUNCTIONS]----------------------------------------
+
+/**
+ *  helper function to return the largest of two values
+ */
+long largestValue(long x, long y) {
+    return (x > y)? x : y;
+};
+
+/** 
+ * helper function to return height of node in tree or 0 if node is null
+ */
+long getHeight(TLDNode *node) {
+    return (node == NULL)? 0 : node->height;
+};
