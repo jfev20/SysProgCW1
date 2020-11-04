@@ -3,9 +3,8 @@
  * GUID: 2306734F
  * Title: SP Exercise 1a
  * Authorship Statement: This is my own work except
- *                       that I used the following link to
+ *                       that I used the site geeksforgeeks to
  *                       help my understanding of AVL Trees
- * https://www.geeksforgeeks.org/avl-tree-set-1-insertion/
  */
 
 #include <stdio.h>
