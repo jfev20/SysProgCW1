@@ -1,3 +1,13 @@
+/**
+ * Name: Joel Feven
+ * GUID: 2306734F
+ * Title: SP Exercise 1a
+ * Authorship Statement: This is my own work except
+ *                       that I used the following link to
+ *                       help my understanding of AVL Trees
+ * https://www.geeksforgeeks.org/avl-tree-set-1-insertion/
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -139,7 +149,7 @@ int valid_date(int day, int month, int year) {
 	int days_in_feb;
 
     // check years are within bounds of accepted range
-	if ((year < 1850) || (year > 9999))
+	if ((year < 1900) || (year > 9999))
 		return 0; 
 
     // if year is leap year set max days in feb to 29, otherwise max feb days to 28

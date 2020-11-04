@@ -1,3 +1,13 @@
+/**
+ * Name: Joel Feven
+ * GUID: 2306734F
+ * Title: SP Exercise 1a
+ * Authorship Statement: This is my own work except
+ *                       that I used the following link to
+ *                       help my understanding of AVL Trees
+ * https://www.geeksforgeeks.org/avl-tree-set-1-insertion/
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,7 +32,7 @@ typedef struct tldnode{
 typedef struct tlditerator{
     TLDList *tree;      // copy of AVL tree
     TLDNode **nodes;    // array of all nodes
-    long size;          // total number fo nodes (taken from TLDList)
+    long size;          // total number of nodes (taken from TLDList)
     int index;          // index of current node
 } TLDIterator;
 
