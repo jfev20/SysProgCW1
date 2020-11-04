@@ -12,9 +12,9 @@
 #include <string.h>
 #include "date.h"
 
-typedef struct date {
+struct date {
     int dd, mm, yy; // initialising days, months, & years
-} Date;
+};
 
 /**
  * |========[ORDER OF FUNCTIONS]========|

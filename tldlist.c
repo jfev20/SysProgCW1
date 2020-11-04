@@ -12,28 +12,28 @@
 #include <string.h>
 #include "tldlist.h"
 
-typedef struct tldlist{
+struct tldlist{
     TLDNode *root;      // Root node of AVL tree 
     Date *start_date;   // starting date for tree
     Date *end_date;     // final date for tree
     long size;          // total number of nodes in tree
     long count;         // number of accepted TLDs
-} TLDList;
+};
 
-typedef struct tldnode{
+struct tldnode{
     TLDNode *left;      // pointer to left child node
     TLDNode *right;     // pointer to right child node
     char *name;         // TLD name
     long count;         // number of TLDs of the same name
     long height;        // height of node in the tree
-} TLDNode;
+};
 
-typedef struct tlditerator{
+struct tlditerator{
     TLDList *tree;      // copy of AVL tree
     TLDNode **nodes;    // array of all nodes
     long size;          // total number of nodes (taken from TLDList)
     int index;          // index of current node
-} TLDIterator;
+};
 
 /**
  * |========[ORDER OF FUNCTIONS]========|
